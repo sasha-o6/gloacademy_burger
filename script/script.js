@@ -4,23 +4,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModal = document.querySelector('#closeModal');
     const questionTitle = document.querySelector('#question');
     const formAnswers = document.querySelector('#formAnswers');
+    const nextButton = document.querySelector('#next');
+    const prevButton = document.querySelector('#prev');
 
     let answerImg;
     let answerImgDOM;
     let answerTitle;
     let answerTitleDOM;
+    let answerType;
+    let formAndswersImgSrc;
+    let formAndswersTitle;
+    
+    let answerCount = 0;
+    let cartCount = 0;
 
-    const playTest = () => {
-        renderQuestions();
-        renderAnswer();
+    const getData = async () => {
+        const data = await fetch('questions.json');
+        if (data.ok) {
+            return data.json();
+        } else {
+            throw new Error(`Дані не були отримані, помилка ${data.status} ${data.statusText}`)
+        }
+    };
+
+    const getGoods = (callback) => {
+        getData()
+            .then(data => {
+                callback(data);
+            })
+            .catch(err => {
+                console.error(err);
+            });
     };
 
     const renderAnswer = () => {
         const answerItem = document.querySelectorAll('.answers-item');
+        
 
         answerItem.forEach(elem => {
-            console.log(elem);
             elem.addEventListener('click', () => {
+                answerType = elem.querySelector('input').getAttribute('type');
+
                 answerImg = elem.querySelector('.answerImg').getAttribute('src');
                 answerImgDOM = document.createElement('p');
                 answerImgDOM.className = 'form-answers-img-src';
@@ -31,50 +55,71 @@ document.addEventListener('DOMContentLoaded', () => {
                 answerTitleDOM.className = 'form-answers-title';
                 answerTitleDOM.textContent = answerTitle;
 
-                let formAndswersImgSrc = document.querySelector('.form-answers-title');
-                let formAndswersTitle = document.querySelector('.form-answers-img-src');
+                formAndswersImgSrc = document.querySelector('.form-answers-title');
+                formAndswersTitle = document.querySelector('.form-answers-img-src');
                 
 
                 if (!formAndswersImgSrc || !formAndswersTitle){
-                    formAnswers.after(answerTitleDOM);
-                    formAnswers.after(answerImgDOM);
+                    // formAnswers.after(answerTitleDOM);
+                    // formAnswers.after(answerImgDOM);
                 }else if(formAndswersImgSrc || formAndswersTitle){
-                    formAndswersTitle.textContent = answerTitle;
-                    formAndswersImgSrc.textContent = answerImg;
-                }
-
-                console.log(elem);
+                    // formAndswersTitle.textContent = answerTitle;
+                    // formAndswersImgSrc.textContent = answerImg;
+                }                
             });
         });
     };
 
-    const renderQuestions = () => {
-        questionTitle.textContent = 'Какого цвета бургер вы хотите?';
-
-        formAnswers.innerHTML = `
+    const renderQuestions = (imgUrl, title, type) => {
+        formAnswers.innerHTML += `
             <div class="answers-item d-flex flex-column">
-                <input type="radio" id="answerItem1" name="answer" class="d-none">
-                <label for="answerItem1" class="d-flex flex-column justify-content-between">
-                    <img class="answerImg" src="./image/burger.png" alt="burger">
-                    <span>Стандарт</span>
+                <input type="${type}" id="answerItem${cartCount}" name="answer" class="d-none">
+                <label for="answerItem${cartCount}" class="d-flex flex-column justify-content-between">
+                    <img class="answerImg" src="${imgUrl}" alt="burger">
+                    <span>${title}</span>
                 </label>
             </div>
-            <div class="answers-item d-flex justify-content-center">
-                <input type="radio" id="answerItem2" name="answer" class="d-none">
-                <label for="answerItem2" class="d-flex flex-column justify-content-between">
-                    <img class="answerImg" src="./image/burgerBlack.png" alt="burger">
-                    <span>Черный</span>
-                </label>
-            </div>
-        `;    
+        `;
+        cartCount += 1;
     };
 
-    btnOpenModal.addEventListener('click', () => {
-        modalBlock.classList.add('d-block');
-        playTest();
-    });
 
-    closeModal.addEventListener('click', () => {
-        modalBlock.classList.remove('d-block');
+    getGoods((data) => {
+        const questions = data.questions;
+
+        const playTest = (index) => {
+            questionTitle.textContent = questions[index].question;
+            questions[index].answers.forEach(element => {
+                renderQuestions(element.url, element.title, questions[index].type);
+            });
+      
+            renderAnswer();
+        };
+
+
+        btnOpenModal.addEventListener('click', () => {
+            modalBlock.classList.add('d-block');
+            playTest(answerCount);
+        });
+    
+        closeModal.addEventListener('click', () => {
+            modalBlock.classList.remove('d-block');
+        });
+    
+        nextButton.addEventListener('click', () => {
+            formAnswers.innerHTML = '';
+            answerCount++;
+            playTest(answerCount);
+            answerCount >= 0 ? prevButton.classList.remove('hide') : null;
+            answerCount >= (questions.length-1) ? nextButton.classList.add('hide') : null;
+        })
+        prevButton.addEventListener('click', () => {
+            formAnswers.innerHTML = '';
+            answerCount--;
+            playTest(answerCount);
+            answerCount <= 0 ? prevButton.classList.add('hide') : null;
+            answerCount <= (questions.length-1) ? nextButton.classList.remove('hide') : null;
+        })
     });
+ 
 });
