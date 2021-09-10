@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playTest(answerCount);
         });
         sendBtn.addEventListener('click', () => {
-            obj[`phone number`] = phoneNumber;
+            obj[`phone number`] = phoneNumber.value;
             chechAnswer();
             modalBlock.classList.remove('d-block');
             console.log(obj)
