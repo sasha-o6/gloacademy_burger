@@ -103,3 +103,7 @@ label span {
   opacity: 0.3;
   pointer-events: none;
 }
+#send{
+  order: -1;
+  margin-right: auto;
+}
